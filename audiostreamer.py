@@ -14,6 +14,9 @@ def audiostreamer(ip_address, port, delay_ms, wav_files, verbose=False):
     --wav: The .wav file(s) to stream. Default is 'samples/minecraft.wav'. Multiple files can be specified.
     --verbose: Display additional debug information. This is an optional flag.
 
+    Usage example:
+    $ python3 audiostreamer.py --ip 192.168.0.1 --port 12345 --delay_ms 20 --verbose --wav file1.wav file2.wav file3.wav
+
     Note: Large delays will cause small hiccups in the audio stream right in the beginning of the stream. This is because
     the stream is adjusting frequency to sync up with the other streams.
     """
@@ -28,34 +31,57 @@ def audiostreamer(ip_address, port, delay_ms, wav_files, verbose=False):
         sample_width = wf.getsampwidth()
         channels = wf.getnchannels()
         num_frames = wf.getnframes()
+        num_bytes = num_frames * sample_width
 
         if verbose:
             print(f'streaming {sample_width*8}-bit/{sample_rate}Hz with {channels} channel(s)')
 
+        # Create a socket
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        # Read the data
+        raw_data = wf.readframes(num_bytes)
+
         # calculate the number of frames(samples) per transmission based on the desired delay. The delay is rounded
         # so that a whole number of frames are sent.
         num_frames_per_transmission = int(delay_ms) * sample_rate // 1000
+        num_bytes_per_transmission = num_frames_per_transmission * sample_width
 
-        for i in range(1, num_frames // num_frames_per_transmission):
+        for i in range(num_frames // num_frames_per_transmission + 1):
+            try:
 
-            # Read the next chunk of audio data and send it
-            data = wf.readframes(num_frames_per_transmission)
+                # Read the next chunk of audio data and send it
+                server_socket.sendto(raw_data[i*num_bytes_per_transmission:i*num_bytes_per_transmission+num_bytes_per_transmission], (ip_address, port))
+
+                # calculate the difference between the number of samples that should have been sent and the number of samples that have been sent
+                samples_should_have_been_sent = (time.time()-begin_time)*sample_rate
+                samples_have_been_sent = num_frames_per_transmission*i
+                delta = samples_should_have_been_sent-samples_have_been_sent
+
+                # Then calculate by how much we are ahead/behind and adjust the sleep time accordingly
+                delta_time = -delta/sample_rate
+
+                if verbose:
+                    print(f'\r[{samples_have_been_sent//sample_rate}/{num_frames//sample_rate} seconds] {delta_time:.5f} seconds behind', end='\r')
+
+                time.sleep(max(delta_time, 0))
+
+            except KeyboardInterrupt:
+
+                break
+        
+        #if the number of frames is not a multiple of the delay, send the remaining fraction of a frame
+        remainder = num_frames - samples_have_been_sent
+        if remainder > 0:
+            data = wf.readframes(remainder)
+            len(data)
             server_socket.sendto(data, (ip_address, port))
+    
+        # Close the .wav file and break the loop
+        wf.close()
 
-            # calculate the difference between the number of samples that should have been sent and the number of samples that have been sent
-            samples_should_have_been_sent = (time.time()-begin_time)*sample_rate
-            samples_have_been_sent = num_frames_per_transmission*i
-            delta = samples_should_have_been_sent-samples_have_been_sent
-
-            # Then calculate by how much we are ahead/behind and adjust the sleep time accordingly
-            delta_time = -delta/sample_rate
-
-            print(f'{wav_file}: {delta_time:.6f} seconds behind')
-
-            time.sleep(max(delta_time, 0))
-
-    # Create a common server socket
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Close the server socket
+        server_socket.close()
 
     # Define start time, making sure that all streams are in sync
     begin_time = time.time()
@@ -70,9 +96,6 @@ def audiostreamer(ip_address, port, delay_ms, wav_files, verbose=False):
     # Wait for all threads to finish
     for thread in threads:
         thread.join()
-
-    # Close the server socket
-    server_socket.close()
 
     return 0
 

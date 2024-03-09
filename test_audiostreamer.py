@@ -1,28 +1,25 @@
 import wave
+from audiostreamer import *
+import socket
+import threading, pyaudio, queue
 
-wf = wave.open("sample audio/01_SaxophoneCloseMic1.wav")
+wf = wave.open("samples/minecraft.wav")
 
 data = None
 sample_rate = wf.getframerate()
 sample_width = wf.getsampwidth()
 channels = wf.getnchannels()
 
-# Welcome to PyShine
-# This is client code to receive video and audio frames over UDP
+running=False
 
-import socket
-import threading, pyaudio, time, queue
-
-host_ip = 'localhost'#  socket.gethostbyname(host_name)
+host_ip = 'localhost'
 print(host_ip)
 port = 12345
-# For details visit: www.pyshine.com
-q = queue.Queue(maxsize=200)
+q = queue.Queue(maxsize=100)
 
-def test_audiostreamer():
-	assert 2+2==4
+def audiorecorder():
 
-""" 	BUFF_SIZE = 65536//8
+	BUFF_SIZE = 65536//8
 	client_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 	client_socket.bind((host_ip,port))
 	p = pyaudio.PyAudio()
@@ -44,6 +41,7 @@ def test_audiostreamer():
 
 	t2 = threading.Thread(target=getAudioData, args=())
 	t2.start()
+	time.sleep(1)
 	print('Now Playing...')
 	while True:
 		frame = q.get()
@@ -51,7 +49,18 @@ def test_audiostreamer():
 
 	client_socket.close()
 	print('Audio closed')
-	os._exit(1) """
+	os._exit(1)
+
+def test_audiostreamer():
+	t1 = threading.Thread(target=audiorecorder, args=())
+	t1.start()
+	t2 = threading.Thread(target=audiostreamer, args=())
+	t2.start()
+	t2.join()
+	running=False
+	t1.join()
+	print('Done')
+	assert 2+2==4
 
 if __name__ == "__main__":
-	test_audiostreamer()
+	audiorecorder()

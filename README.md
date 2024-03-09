@@ -33,3 +33,7 @@ python3 audiostreamer.py --ip 192.168.0.125 --port 12345 --delay_ms 10 --verbose
 ### Assumptions
 
 - The receiver end already knows what format the .wav file has (bitrate, bitdepth, channel(s))
+
+### testing
+
+- 

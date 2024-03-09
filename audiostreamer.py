@@ -1,6 +1,6 @@
 import wave, time, socket, argparse, threading
 
-def audiostreamer():
+def audiostreamer(ip_address, port, delay_ms, wav_files, verbose=False):
     """
     Stream audio data from .wav files over UDP.
 
@@ -17,13 +17,6 @@ def audiostreamer():
     Note: Large delays will cause small hiccups in the audio stream right in the beginning of the stream. This is because
     the stream is adjusting frequency to sync up with the other streams.
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--port", help="port (default '12345')", default=12345)
-    parser.add_argument("--ip", help="ip address (default 'localhost')", default='localhost')
-    parser.add_argument("--delay_ms", help="delay in milliseconds (default '10ms')", default=10)
-    parser.add_argument("--wav", help=".wav file", default="samples/minecraft.wav", nargs='*')
-    parser.add_argument("--verbose", help="display additional debug information", action='store_true')
-    args = parser.parse_args()
 
     # Define the function that will be run in a separate thread for each .wav file
     def startStream(wav_file):
@@ -36,18 +29,18 @@ def audiostreamer():
         channels = wf.getnchannels()
         num_frames = wf.getnframes()
 
-        if args.verbose:
+        if verbose:
             print(f'streaming {sample_width*8}-bit/{sample_rate}Hz with {channels} channel(s)')
 
         # calculate the number of frames(samples) per transmission based on the desired delay. The delay is rounded
         # so that a whole number of frames are sent.
-        num_frames_per_transmission = int(args.delay_ms) * sample_rate // 1000
+        num_frames_per_transmission = int(delay_ms) * sample_rate // 1000
 
         for i in range(1, num_frames // num_frames_per_transmission):
 
             # Read the next chunk of audio data and send it
             data = wf.readframes(num_frames_per_transmission)
-            server_socket.sendto(data, (args.ip, args.port))
+            server_socket.sendto(data, (ip_address, port))
 
             # calculate the difference between the number of samples that should have been sent and the number of samples that have been sent
             samples_should_have_been_sent = (time.time()-begin_time)*sample_rate
@@ -69,7 +62,7 @@ def audiostreamer():
 
     # Create a thread for each .wav file
     threads = []
-    for wav_file in args.wav:
+    for wav_file in wav_files:
         thread = threading.Thread(target=startStream, args=(wav_file,))
         threads.append(thread)
         thread.start()
@@ -84,4 +77,11 @@ def audiostreamer():
     return 0
 
 if __name__ == "__main__":
-    audiostreamer()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", help="port (default '12345')", default=12345)
+    parser.add_argument("--ip", help="ip address (default 'localhost')", default='localhost')
+    parser.add_argument("--delay_ms", help="delay in milliseconds (default '10ms')", default=10)
+    parser.add_argument("--wav", help=".wav file", default="samples/minecraft.wav", nargs='*')
+    parser.add_argument("--verbose", help="display additional debug information", action='store_true')
+    args = parser.parse_args()
+    audiostreamer(args.ip, args.port, args.delay_ms, args.wav, args.verbose)

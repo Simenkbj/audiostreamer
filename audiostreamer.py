@@ -16,9 +16,6 @@ def audiostreamer(ip_address, port, delay_ms, wav_files, verbose=False):
 
     Usage example:
     $ python3 audiostreamer.py --ip 192.168.0.1 --port 12345 --delay_ms 20 --verbose --wav file1.wav file2.wav file3.wav
-
-    Note: Large delays will cause small hiccups in the audio stream right in the beginning of the stream. This is because
-    the stream is adjusting frequency to sync up with the other streams.
     """
 
     # Define the function that will be run in a separate thread for each .wav file
@@ -39,15 +36,16 @@ def audiostreamer(ip_address, port, delay_ms, wav_files, verbose=False):
         # Create a socket
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        # Read the data
+        # Extract raw data from the wave object
         raw_data = wf.readframes(num_bytes)
 
-        # calculate the number of frames(samples) per transmission based on the desired delay. The delay is rounded
-        # so that a whole number of frames are sent.
+        # calculate the number of frames(samples) and bytes per transmission based on the desired delay.
         num_frames_per_transmission = int(delay_ms) * sample_rate // 1000
         num_bytes_per_transmission = num_frames_per_transmission * sample_width
+        num_of_transmissions = num_frames // num_frames_per_transmission + 1
 
-        for i in range(num_frames // num_frames_per_transmission + 1):
+        # Send the audio data in 
+        for i in range(num_of_transmissions):
             try:
 
                 # Read the next chunk of audio data and send it
@@ -64,6 +62,7 @@ def audiostreamer(ip_address, port, delay_ms, wav_files, verbose=False):
                 if verbose:
                     print(f'\r[{samples_have_been_sent//sample_rate}/{num_frames//sample_rate} seconds] {delta_time:.5f} seconds behind', end='\r')
 
+                # ensure positive sleep time
                 time.sleep(max(delta_time, 0))
 
             except KeyboardInterrupt:
@@ -77,7 +76,7 @@ def audiostreamer(ip_address, port, delay_ms, wav_files, verbose=False):
             len(data)
             server_socket.sendto(data, (ip_address, port))
     
-        # Close the .wav file and break the loop
+        # Close the wave object
         wf.close()
 
         # Close the server socket

@@ -4,13 +4,13 @@ This application reads a .wav file and converts it into a real-time UDP packet s
 
 ## Usage
 
-For the Development of this module, python3.10 was used, but most python3 versions should work. To install the neccesary dependencies run the following command
+For the Development of this module, Ubuntu-22.04 and python3.10 was used, but most python3 versions should work. To install the neccesary dependencies run the following command
 
 ```
 pip install -r requirements.txt
 ```
 
-The application can then be run and configured using the `--ip`, `-port`, `--wav_file`, `--delay_ms` and `--verbose` parameters. Note that `--verbose` has no input, and `--wav_file` can have several. Here is an example,
+The application can then be run and configured using the `--ip`, `-port`, `--wav_file`, `--delay_ms` and `--verbose` parameters. Note that `--verbose` has no input, and `--wav_file` can have several. Here is an example
 
 ```
 python3 audiostreamer.py --wav_file samples/01_SaxophoneCloseMic1.wav samples/02_SaxophoneCloseMic2.wav --delay_ms 10 --ip localhost --port 123 --verbose 

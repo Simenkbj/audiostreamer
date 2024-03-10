@@ -17,8 +17,7 @@ timestamps = []
 
 def test_audiostreamer():
 	"""
-	test the audiostreamer application by saving the transmitted data to raw data. This test
-	passes if the application can be run without errors.
+	This test passes if the application can be run without errors.
 	"""
 
 	def	audiorecorder(port):
@@ -50,7 +49,6 @@ def test_audiostreamer():
 	t2.join()
 	t1.join()
 
-
 def test_length_in_bytes():
 	"""
 	This test passes if the length of the .wav file is equal to the length of the received data
@@ -67,7 +65,6 @@ def test_delay():
 	"""
 	This test passes if the delay is within 1% of the expected delay
 	"""
-
 	# calculate the average time between each frame
 	delta = [timestamps[i+1]-timestamps[i] for i in range(len(timestamps)-1)]
 	average = sum(delta)/len(delta)

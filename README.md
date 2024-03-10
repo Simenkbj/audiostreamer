@@ -1,6 +1,6 @@
 # audiostreamer
 
-This application reads a .wav file and converts it into a real-time UDP packet stream to a specified IP address and port. This application allows for easy configuration of delay/packet size and the ability to start multiple instances of audionode with multiple different .wav files.
+This application reads a .wav file and converts it into a real-time UDP packet stream to a specified IP address and port, and allows for easy configuration of delay/packet size through the command line and the ability to start multiple instances of audionode with multiple different .wav files.
 
 ## Usage
 
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 The application can then be run and configured using the `--ip`, `-port`, `--wav_file`, `--delay_ms` and `--verbose` parameters. Note that `--verbose` has no input, and `--wav_file` can have several. Here is an example,
 
 ```
-python3 audiostreamer.py --wav samples/01_SaxophoneCloseMic1.wav samples/02_SaxophoneCloseMic2.wav --delay_ms 10 --ip localhost --port 123 --verbose 
+python3 audiostreamer.py --wav_file samples/01_SaxophoneCloseMic1.wav samples/02_SaxophoneCloseMic2.wav --delay_ms 10 --ip localhost --port 123 --verbose 
 ```
 
 ## Unit-Testing
@@ -39,8 +39,8 @@ Note: these test only verify that the node is functioning properly, it is not me
 
 ## challenges
 
-- running a for loop at a specified frequency turned out to be more difficult than expected. Even though time.sleep() is in absolute terms very accurate, it always drifted to the point where the receive buffer would either overrun or underrun. To mitigate this, the loop was instead modified to actively adjust sleep time based on UTC time as a way to correct for drift.
+- running a for loop at a specified frequency turned out to be more difficult than expected. Even though time.sleep() is in absolute terms very accurate, it always drifted to the point where the receive buffer would either overrun or underrun. To mitigate this, the loop was modified to actively adjust sleep time based on UTC time as a way to correct for drift.
 
 ## Further work
 
-- For real live streamed audio, it might be benefitial to send timestamp along with the sound data. This timestamp can be replaced with precise UTC time which can synched using NTP (which has sub millisecond accuracy in local networks) to prevent clock differences.
+- For real live streamed audio, it might be benefitial to send timestamp too. Precise UTC time can be used, which can synched using NTP, which can have sub millisecond accuracy in local networks (https://en.wikipedia.org/wiki/Network_Time_Protocol).

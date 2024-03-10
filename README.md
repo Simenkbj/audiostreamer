@@ -1,6 +1,6 @@
 # audiostreamer
 
-This application reads a .wav file and converts it into a real-time UDP packet stream to a specified IP address and port, and allows for easy configuration of delay/packet size through the command line and the ability to start multiple instances of audionode with multiple different .wav files.
+This application reads a .wav file and converts it into a real-time UDP packet stream to a specified IP address and port, allows for easy configuration of delay/packet size through the command line and for the ability to start multiple audio streams with multiple different .wav files.
 
 ## Usage
 
@@ -18,7 +18,7 @@ python3 audiostreamer.py --wav_file samples/01_SaxophoneCloseMic1.wav samples/02
 
 ## Unit-Testing
 
-The `/tests` folder has a couple of unit-tests for veryfing the correct execution of the audionode module. To run the unit-tests install the requirements using,
+The `/tests` folder has a unit-test for veryfing the the audionode module. To run the unit-test install the requirements using,
 
 ```
 pip install -r tests/test_requirements.txt
@@ -44,3 +44,5 @@ Note: these test only verify that the node is functioning properly, it is not me
 ## Further work
 
 - For real live streamed audio, it might be benefitial to send timestamp too. Precise UTC time can be used, which can synched using NTP, which can have sub millisecond accuracy in local networks (https://en.wikipedia.org/wiki/Network_Time_Protocol).
+
+- As of now, to differentiate different audio streams you can only look at the originating port. Alternative solutions can be implemented.
